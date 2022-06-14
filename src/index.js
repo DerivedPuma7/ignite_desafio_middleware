@@ -10,19 +10,79 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const userAccount = users.find((user) => user.username === username);
+
+  if(!userAccount) {
+    return response.status(404).json({
+      error: "Usuário não encontrado"
+    });
+  }
+
+  request.user = userAccount;
+  return next();
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request;
+
+  const quantidadeTodosUser = user.todos.length;
+  
+  if(!user.pro && quantidadeTodosUser >= 10) {
+    return response.status(403).json({
+      error: "Usuário não pode cadastrar mais tarefas"
+    });
+  }
+
+  return next();
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  
+  const { id } = request.params;
+  
+  const user = users.find((user) => user.username === username);
+  if(!user) {
+    return response.status(404).json({
+      error: "Usuário não encontrado"
+    });
+  }
+  
+  const is_uuid = validate(id);
+  if(!is_uuid) {
+    return response.status(400).json({
+      error: "Id inválido"
+    });
+  }
+
+  const userTodos = user.todos;
+  const todo = userTodos.find((todo) => todo.id === id);
+  if(!todo) {
+    return response.status(404).json({
+      error: "Todo não encontrado"
+    });
+  }
+
+  request.user = user;
+  request.todo = todo;
+
+  return next();
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+
+  const user = users.find((user) => user.id === id);
+
+  if(!user) {
+    return response.status(404).json({
+      error: "Usuário não encontrado"
+    });
+  }
+
+  request.user = user;
+  return next();
 }
 
 app.post('/users', (request, response) => {
